@@ -5,7 +5,7 @@ struct stats{
 	int balance;
 };	
 
-struct paramets{
+struct parameters{
 	int thread_number;
 	int loop_count;
 	char* file;

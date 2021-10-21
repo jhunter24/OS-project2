@@ -209,7 +209,7 @@ int main(int argc,char* argv[]){
 		th_params[i]->loop_count = loop_count;
 		th_params[i]->file = new char[1024];
 		th_params[i]->thread_number = i;
-		string fileName = "th" + to_string(i) + "output.txt";
+		string fileName = "unsynchronized_th" + to_string(i) + "output.txt";
 		cout << "th" + to_string(i) << endl;
 		
 		strcpy(th_params[i]->file,fileName.c_str());

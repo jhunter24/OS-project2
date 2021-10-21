@@ -1,0 +1,1 @@
+make p0: prog0.cpp stats.h

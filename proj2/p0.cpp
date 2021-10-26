@@ -5,6 +5,7 @@
 #include <fstream>
 #include <string.h>
 #include <iostream>
+#include <unistd.h>
 
 #include "ctime"
 #include "my_const.h"
@@ -40,6 +41,9 @@ void* transactions(void* params){
 				th_checkings[th_params->thread_number].no_deposits++;
 				printf("DEPOSIT CHECKING %i\n",amount);
 				fprintf(oFile,"DEPOSIT CHECKING %i\n",amount);
+				
+				
+
 				break;
 			case 1: //Withraw Checking Transactions
 				amount = (random() % 50)+ 50;
@@ -51,18 +55,22 @@ void* transactions(void* params){
 					th_checkings[th_params->thread_number].no_rejected++;
 					printf("WITHDRAWAL CHECKING %i (REJECTED)\n",amount);
 					fprintf(oFile,"WITHDRAWAL CHECKING %i (REJECTED)\n",amount);
-					break;
+					
+					
 
+					break;
 				}
 				// else it succeeds
 
-				
+				checking_account.balance -= amount;
 				checking_account.no_withdrawals++;
 
 				th_checkings[th_params->thread_number].balance -= amount;
 				th_checkings[th_params->thread_number].no_withdrawals++;
 				printf("WITHDRAWAL CHECKING %i\n",amount);
 				fprintf(oFile,"WITHDRAWAL CHECKING %i\n",amount);
+				
+				
 
 				break;
 			case 2: // Deposit into Savings
@@ -79,6 +87,8 @@ void* transactions(void* params){
 				th_savings[th_params->thread_number].no_deposits++;
 				printf("DEPOSIT SAVINGS %i\n",amount);
 				fprintf(oFile,"DEPOSIT SAVINGS %i\n",amount);
+				
+				
 
 				break;
 			case 3: //Withdraw From Savings
@@ -92,6 +102,8 @@ void* transactions(void* params){
 					th_savings[th_params->thread_number].no_rejected++;
 					printf("WITHDRAWAL SAVINGS %i (REJECTED)\n",amount);		
 					fprintf(oFile,"WITHDRAWAL SAVINGS %i (REJECTED)\n",amount);
+					
+					
 
 					break;
 				}	
@@ -103,6 +115,8 @@ void* transactions(void* params){
 				th_savings[th_params->thread_number].no_deposits++;
 				printf("WITHDRAWAL SAVINGS %i\n",amount);		
 				fprintf(oFile,"WITHDRAWAL SAVINGS %i\n",amount);
+				
+				
 
 				break;
 			case 4: //Transfer form checking to savings account 
@@ -115,7 +129,9 @@ void* transactions(void* params){
 					th_checkings[th_params->thread_number].no_rejected++;
 					printf("TRANSFER CHECKING TO SAVINGS %i (REJECTED)\n",amount);
 					fprintf(oFile,"TRANSFER CHECKING TO SAVINGS %i (REJECTED)\n",amount);
+				
 					
+
 					break;
 				}
 				// else Succeeds
@@ -134,6 +150,8 @@ void* transactions(void* params){
 
 				printf("TRANSFER CHECKING TO SAVINGS %i\n",amount);
 				fprintf(oFile,"TRANSFER CHECKING TO SAVINGS %i\n",amount);
+				
+				
 
 				break;
 			case 5: //Transfer from savings to checking
@@ -147,6 +165,8 @@ void* transactions(void* params){
 
 						printf("TRANSFER CHECKING TO SAVINGS %i (REJECTED)\n",amount);
 						fprintf(oFile,"TRANSFER CHECKING TO SAVINGS %i (REJECTED)\n",amount);
+						
+						
 
 						break;
 					}
@@ -164,12 +184,16 @@ void* transactions(void* params){
 
 					printf("TRANSFER CHECKING TO SAVINGS %i\n",amount);
 					fprintf(oFile,"TRANSFER CHECKING TO SAVINGS %i\n",amount);
-
+				
+				
+				
 				break;
 			default:
 				//error occured with random() % 6
 				break;
 		}
+		
+		
 	}
 
 }
@@ -217,13 +241,7 @@ int main(int argc,char* argv[]){
 		
 	}
 
-	int saving_thSum = 0;
-	int checking_thSum = 0;
-	for(int i = 0;i<THREAD_COUNT;i++){
-		checking_thSum += th_checkings[i].balance;
-		saving_thSum += th_savings[i].balance;
-
-	}
+	
 
 	
 		
@@ -243,7 +261,14 @@ int main(int argc,char* argv[]){
 		pthread_join(threads[8],NULL); 
 		pthread_join(threads[9],NULL); 
 
-		if(checking_account.balance != checking_thSum){
+	int saving_thSum = 0;
+	int checking_thSum = 0;
+	for(int i = 0;i<THREAD_COUNT;i++){
+		checking_thSum += th_checkings[i].balance;
+		saving_thSum += th_savings[i].balance;
+	}	
+
+		if(checking_account.balance != checking_thSum || saving_thSum != savings_account.balance){
 		cout << "The race condition occured" << endl;
 		cout << "Sum of all th_checking: $" << checking_thSum << endl;
 		cout << "Sum of all th_saving: $" << saving_thSum << endl;
@@ -251,6 +276,10 @@ int main(int argc,char* argv[]){
 		cout << "Balance of savings_account: $" << savings_account.balance << endl;
 		}else{
 			cout << "The race condition did not occur." << endl;
+			cout << "Sum of all th_checking: $" << checking_thSum << endl;
+			cout << "Sum of all th_saving: $" << saving_thSum << endl;
+			cout << "Balance of checking_account: $" << checking_account.balance << endl;
+			cout << "Balance of savings_account: $" << savings_account.balance << endl;
 		}
 
 

@@ -20,6 +20,7 @@ stats th_checkings[THREAD_COUNT];
 stats th_savings[THREAD_COUNT];
 
 
+
 void* transactions(void* params){
 	parameters* th_params = (parameters * ) params;
 	int amount = 0;
@@ -27,28 +28,41 @@ void* transactions(void* params){
 	FILE* oFile = fopen(th_params->file,"w");
 	
 
-
+	int reg;
 	for(int i = 0;i < th_params->loop_count;i++){
 	
+		
+		
+		
 		switch(random() % 6){
 			case 0: //Deposit Checking Transactions
 				amount = (random() % 50) + 50;
-				
-				checking_account.balance += amount;
+
+				reg = checking_account.balance;
+				reg += amount;
+				usleep(rand() % 1000);
+				checking_account.balance = reg;
+
 				checking_account.no_deposits++;
 
-				th_checkings[th_params->thread_number].balance += amount;
+				reg = th_checkings[th_params->thread_number].balance;
+				reg += amount;
+				usleep(rand() % 1000);
+				th_checkings[th_params->thread_number].balance = reg;
+
 				th_checkings[th_params->thread_number].no_deposits++;
 				printf("DEPOSIT CHECKING %i\n",amount);
 				fprintf(oFile,"DEPOSIT CHECKING %i\n",amount);
 				
 				
 
+
 				break;
 			case 1: //Withraw Checking Transactions
+				
 				amount = (random() % 50)+ 50;
 
-				if(th_checkings[th_params->thread_number].balance < amount){ // failed due to insufficient funds
+				if(th_checkings[th_params->thread_number].balance < amount){ 
 					
 					checking_account.no_rejected++;
 
@@ -56,43 +70,52 @@ void* transactions(void* params){
 					printf("WITHDRAWAL CHECKING %i (REJECTED)\n",amount);
 					fprintf(oFile,"WITHDRAWAL CHECKING %i (REJECTED)\n",amount);
 					
-					
-
 					break;
 				}
 				// else it succeeds
+				reg = checking_account.balance;
+				reg -= amount;
+				usleep(rand() % 1000);
+				checking_account.balance = reg;
 
-				checking_account.balance -= amount;
 				checking_account.no_withdrawals++;
 
-				th_checkings[th_params->thread_number].balance -= amount;
+				reg = th_checkings[th_params->thread_number].balance;
+				reg -= amount;
+				usleep(rand() % 1000);
+				th_checkings[th_params->thread_number].balance = reg;
+
 				th_checkings[th_params->thread_number].no_withdrawals++;
 				printf("WITHDRAWAL CHECKING %i\n",amount);
 				fprintf(oFile,"WITHDRAWAL CHECKING %i\n",amount);
-				
-				
-
+						
 				break;
 			case 2: // Deposit into Savings
-
+				
 				amount = (random() % 50) + 100;
 
 				//update the shared global variables 
-				savings_account.balance+= amount;
+				reg = savings_account.balance;
+				reg += amount;
+				usleep(rand() % 1000);
+				savings_account.balance= reg;
+
 				savings_account.no_deposits++;
 
 
 				// update the global variable for thread #
-				th_savings[th_params->thread_number].balance += amount;
+				reg = th_savings[th_params->thread_number].balance;
+				reg += amount;
+				usleep(rand() % 1000);
+				th_savings[th_params->thread_number].balance = reg;
+
 				th_savings[th_params->thread_number].no_deposits++;
 				printf("DEPOSIT SAVINGS %i\n",amount);
-				fprintf(oFile,"DEPOSIT SAVINGS %i\n",amount);
-				
-				
+				fprintf(oFile,"DEPOSIT SAVINGS %i\n",amount);				
 
 				break;
 			case 3: //Withdraw From Savings
-
+				
 				amount = (random() % 50) +100;
 
 				if(th_savings[th_params->thread_number].balance < amount){ // Failed due to insufficient funds
@@ -101,25 +124,30 @@ void* transactions(void* params){
 
 					th_savings[th_params->thread_number].no_rejected++;
 					printf("WITHDRAWAL SAVINGS %i (REJECTED)\n",amount);		
-					fprintf(oFile,"WITHDRAWAL SAVINGS %i (REJECTED)\n",amount);
-					
-					
+					fprintf(oFile,"WITHDRAWAL SAVINGS %i (REJECTED)\n",amount);					
 
 					break;
 				}	
 				// else succeeds
 				savings_account.no_withdrawals++;
-				savings_account.balance-= amount;
 				
-				th_savings[th_params->thread_number].balance-= amount;
-				th_savings[th_params->thread_number].no_deposits++;
+				reg = savings_account.balance;
+				reg -= amount;
+				usleep(rand() % 1000);
+				savings_account.balance = reg;
+				
+				reg = th_savings[th_params->thread_number].balance;
+				reg -= amount;
+				usleep(rand() % 1000);
+				th_savings[th_params->thread_number].balance = reg;
+				
+				th_savings[th_params->thread_number].no_withdrawals++;
 				printf("WITHDRAWAL SAVINGS %i\n",amount);		
 				fprintf(oFile,"WITHDRAWAL SAVINGS %i\n",amount);
-				
-				
 
 				break;
 			case 4: //Transfer form checking to savings account 
+			
 				amount = (random() % 100) +100;
 
 				if(th_checkings[th_params->thread_number].balance < amount){ //Transaction failed (REJECTED)
@@ -128,72 +156,103 @@ void* transactions(void* params){
 
 					th_checkings[th_params->thread_number].no_rejected++;
 					printf("TRANSFER CHECKING TO SAVINGS %i (REJECTED)\n",amount);
-					fprintf(oFile,"TRANSFER CHECKING TO SAVINGS %i (REJECTED)\n",amount);
-				
-					
+					fprintf(oFile,"TRANSFER CHECKING TO SAVINGS %i (REJECTED)\n",amount);									
 
 					break;
 				}
 				// else Succeeds
 
+				// withdraw from the checking account
 				checking_account.no_withdrawals++;
-				checking_account.balance -= amount;
-
-				savings_account.no_deposits++;
-				savings_account.balance += amount;
+				reg = checking_account.balance;
+				reg -= amount;
+				usleep(rand() % 1000);
+				checking_account.balance = reg;
 
 				th_checkings[th_params->thread_number].no_withdrawals++;
-				th_checkings[th_params->thread_number].balance -= amount;
+				reg = th_checkings[th_params->thread_number].balance;
+				reg -= amount;
+				usleep(rand() % 1000);
+				th_checkings[th_params->thread_number].balance = reg;
 
+				//deposit into the savings
 				th_savings[th_params->thread_number].no_deposits++;
-				th_savings[th_params->thread_number].balance += amount;
+				reg = th_savings[th_params->thread_number].balance;
+				reg += amount;
+				usleep(rand() % 1000);
+				th_savings[th_params->thread_number].balance = reg;
+				savings_account.no_deposits++;
+
+				reg = savings_account.balance;
+				reg += amount;
+				usleep(rand() % 1000);
+				savings_account.balance = reg;
+
+				
 
 				printf("TRANSFER CHECKING TO SAVINGS %i\n",amount);
-				fprintf(oFile,"TRANSFER CHECKING TO SAVINGS %i\n",amount);
-				
-				
+				fprintf(oFile,"TRANSFER CHECKING TO SAVINGS %i\n",amount);	
 
 				break;
 			case 5: //Transfer from savings to checking
+				
+				amount = (random() % 100)+ 100;
 
-					amount = (random() % 100)+ 100;
+				if(th_savings[th_params->thread_number].balance < amount){ //Transaction fails
 
-					if(th_savings[th_params->thread_number].balance < amount){ //Transaction fails
+					savings_account.no_rejected++;
+					th_savings[th_params->thread_number].no_rejected++;
 
-						savings_account.no_rejected++;
-						th_savings[th_params->thread_number].no_rejected++;
+					printf("TRANSFER CHECKING TO SAVINGS %i (REJECTED)\n",amount);
+					fprintf(oFile,"TRANSFER CHECKING TO SAVINGS %i (REJECTED)\n",amount);	
 
-						printf("TRANSFER CHECKING TO SAVINGS %i (REJECTED)\n",amount);
-						fprintf(oFile,"TRANSFER CHECKING TO SAVINGS %i (REJECTED)\n",amount);
-						
-						
-
-						break;
-					}
+					break;
+				}
 					// else transaction succeeds
+ 
+				//withdraw from savings account
+				reg = savings_account.balance;
+				reg -= amount;
+				usleep(rand() % 1000);
+				savings_account.balance = reg;
 
-					savings_account.balance -= amount;
-					checking_account.balance += amount;
-					savings_account.no_withdrawals++;
-					checking_account.no_deposits++;
-
-					th_savings[th_params->thread_number].balance -= amount;
-					th_checkings[th_params->thread_number].balance += amount;
-					th_savings[th_params->thread_number].no_withdrawals++;
-					th_checkings[th_params->thread_number].no_deposits++;
-
-					printf("TRANSFER CHECKING TO SAVINGS %i\n",amount);
-					fprintf(oFile,"TRANSFER CHECKING TO SAVINGS %i\n",amount);
+				savings_account.no_withdrawals++;
 				
 				
+				reg = th_savings[th_params->thread_number].balance;
+				reg -= amount;
+				usleep(rand() % 1000);
+				th_savings[th_params->thread_number].balance = reg;
+
+				th_savings[th_params->thread_number].no_withdrawals++;
 				
+				//deposit into checking
+
+				reg = checking_account.balance;
+				reg += amount;
+				usleep(rand() % 1000);
+				checking_account.balance = reg;
+
+				checking_account.no_deposits++;
+
+				
+				reg = th_checkings[th_params->thread_number].balance;
+				reg += amount;
+				usleep(rand() % 1000);
+				th_checkings[th_params->thread_number].balance = reg;
+				th_checkings[th_params->thread_number].no_deposits++;
+
+				printf("TRANSFER CHECKING TO SAVINGS %i\n",amount);
+				fprintf(oFile,"TRANSFER CHECKING TO SAVINGS %i\n",amount);
+
 				break;
 			default:
 				//error occured with random() % 6
 				break;
 		}
-		
-		
+
+	
+
 	}
 
 }
@@ -219,6 +278,8 @@ int main(int argc,char* argv[]){
 
 	parameters* th_params[THREAD_COUNT]; 
 	for(int i =0;i<THREAD_COUNT;i++){
+		th_checkings[i].balance = 0;
+		th_savings[i].balance = 0;
 		th_params[i] = new parameters;
 	}
 
@@ -261,6 +322,10 @@ int main(int argc,char* argv[]){
 		pthread_join(threads[8],NULL); 
 		pthread_join(threads[9],NULL); 
 
+	cout << endl << "Balance of checking_account: $" << checking_account.balance << endl;
+	cout << "Balance of savings_account: $" << savings_account.balance << endl;
+
+
 	int saving_thSum = 0;
 	int checking_thSum = 0;
 	for(int i = 0;i<THREAD_COUNT;i++){
@@ -269,17 +334,13 @@ int main(int argc,char* argv[]){
 	}	
 
 		if(checking_account.balance != checking_thSum || saving_thSum != savings_account.balance){
-		cout << "The race condition occured" << endl;
-		cout << "Sum of all th_checking: $" << checking_thSum << endl;
-		cout << "Sum of all th_saving: $" << saving_thSum << endl;
-		cout << "Balance of checking_account: $" << checking_account.balance << endl;
-		cout << "Balance of savings_account: $" << savings_account.balance << endl;
+			cout << "The race condition occured" << endl;
+			cout << "Sum of all th_checking: $" << checking_thSum << endl;
+			cout << "Sum of all th_saving: $" << saving_thSum << endl;
 		}else{
 			cout << "The race condition did not occur." << endl;
 			cout << "Sum of all th_checking: $" << checking_thSum << endl;
-			cout << "Sum of all th_saving: $" << saving_thSum << endl;
-			cout << "Balance of checking_account: $" << checking_account.balance << endl;
-			cout << "Balance of savings_account: $" << savings_account.balance << endl;
+			cout << "Sum of all th_saving: $" << saving_thSum << endl;	
 		}
 
 

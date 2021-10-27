@@ -36,7 +36,7 @@ void* transactions(void* params){
 
 
 	for(int i = 0;i < th_params->loop_count;i++){
-		
+		int reg;
 		pthread_mutex_lock(&mutex);
 		
 		printf("Thread %i locks the mutex \n", th_params->thread_number);	
@@ -46,57 +46,85 @@ void* transactions(void* params){
 		switch(random() % 6){
 			case 0: //Deposit Checking Transactions
 				amount = (random() % 50) + 50;
-				
-				checking_account.balance += amount;
+
+				reg = checking_account.balance;
+				reg += amount;
+				usleep(rand() % 1000);
+				checking_account.balance = reg;
+
 				checking_account.no_deposits++;
 
-				th_checkings[th_params->thread_number].balance += amount;
+				reg = th_checkings[th_params->thread_number].balance;
+				reg += amount;
+				usleep(rand() % 1000);
+				th_checkings[th_params->thread_number].balance = reg;
+
 				th_checkings[th_params->thread_number].no_deposits++;
 				printf("DEPOSIT CHECKING %i\n",amount);
 				fprintf(oFile,"DEPOSIT CHECKING %i\n",amount);
+				
+				
+
+
 				break;
 			case 1: //Withraw Checking Transactions
+				
 				amount = (random() % 50)+ 50;
 
-				if(th_checkings[th_params->thread_number].balance < amount){ // failed due to insufficient funds
+				if(th_checkings[th_params->thread_number].balance < amount){ 
 					
 					checking_account.no_rejected++;
 
 					th_checkings[th_params->thread_number].no_rejected++;
 					printf("WITHDRAWAL CHECKING %i (REJECTED)\n",amount);
 					fprintf(oFile,"WITHDRAWAL CHECKING %i (REJECTED)\n",amount);
+					
 					break;
-
 				}
 				// else it succeeds
+				reg = checking_account.balance;
+				reg -= amount;
+				usleep(rand() % 1000);
+				checking_account.balance = reg;
 
-				checking_account.balance -= amount;
 				checking_account.no_withdrawals++;
 
-				th_checkings[th_params->thread_number].balance -= amount;
+				reg = th_checkings[th_params->thread_number].balance;
+				reg -= amount;
+				usleep(rand() % 1000);
+				th_checkings[th_params->thread_number].balance = reg;
+
 				th_checkings[th_params->thread_number].no_withdrawals++;
 				printf("WITHDRAWAL CHECKING %i\n",amount);
 				fprintf(oFile,"WITHDRAWAL CHECKING %i\n",amount);
-
+						
 				break;
 			case 2: // Deposit into Savings
-
+				
 				amount = (random() % 50) + 100;
 
 				//update the shared global variables 
-				savings_account.balance+= amount;
+				reg = savings_account.balance;
+				reg += amount;
+				usleep(rand() % 1000);
+				savings_account.balance= reg;
+
 				savings_account.no_deposits++;
 
 
 				// update the global variable for thread #
-				th_savings[th_params->thread_number].balance += amount;
+				reg = th_savings[th_params->thread_number].balance;
+				reg += amount;
+				usleep(rand() % 1000);
+				th_savings[th_params->thread_number].balance = reg;
+
 				th_savings[th_params->thread_number].no_deposits++;
 				printf("DEPOSIT SAVINGS %i\n",amount);
-				fprintf(oFile,"DEPOSIT SAVINGS %i\n",amount);
+				fprintf(oFile,"DEPOSIT SAVINGS %i\n",amount);				
 
 				break;
 			case 3: //Withdraw From Savings
-
+				
 				amount = (random() % 50) +100;
 
 				if(th_savings[th_params->thread_number].balance < amount){ // Failed due to insufficient funds
@@ -105,21 +133,30 @@ void* transactions(void* params){
 
 					th_savings[th_params->thread_number].no_rejected++;
 					printf("WITHDRAWAL SAVINGS %i (REJECTED)\n",amount);		
-					fprintf(oFile,"WITHDRAWAL SAVINGS %i (REJECTED)\n",amount);
+					fprintf(oFile,"WITHDRAWAL SAVINGS %i (REJECTED)\n",amount);					
 
 					break;
 				}	
 				// else succeeds
 				savings_account.no_withdrawals++;
-				savings_account.balance-= amount;
 				
-				th_savings[th_params->thread_number].balance-= amount;
-				th_savings[th_params->thread_number].no_deposits++;
+				reg = savings_account.balance;
+				reg -= amount;
+				usleep(rand() % 1000);
+				savings_account.balance = reg;
+				
+				reg = th_savings[th_params->thread_number].balance;
+				reg -= amount;
+				usleep(rand() % 1000);
+				th_savings[th_params->thread_number].balance = reg;
+				
+				th_savings[th_params->thread_number].no_withdrawals++;
 				printf("WITHDRAWAL SAVINGS %i\n",amount);		
 				fprintf(oFile,"WITHDRAWAL SAVINGS %i\n",amount);
 
 				break;
 			case 4: //Transfer form checking to savings account 
+			
 				amount = (random() % 100) +100;
 
 				if(th_checkings[th_params->thread_number].balance < amount){ //Transaction failed (REJECTED)
@@ -128,56 +165,94 @@ void* transactions(void* params){
 
 					th_checkings[th_params->thread_number].no_rejected++;
 					printf("TRANSFER CHECKING TO SAVINGS %i (REJECTED)\n",amount);
-					fprintf(oFile,"TRANSFER CHECKING TO SAVINGS %i (REJECTED)\n",amount);
-					
+					fprintf(oFile,"TRANSFER CHECKING TO SAVINGS %i (REJECTED)\n",amount);									
+
 					break;
 				}
 				// else Succeeds
 
+				// withdraw from the checking account
 				checking_account.no_withdrawals++;
-				checking_account.balance -= amount;
-
-				savings_account.no_deposits++;
-				savings_account.balance += amount;
+				reg = checking_account.balance;
+				reg -= amount;
+				usleep(rand() % 1000);
+				checking_account.balance = reg;
 
 				th_checkings[th_params->thread_number].no_withdrawals++;
-				th_checkings[th_params->thread_number].balance -= amount;
+				reg = th_checkings[th_params->thread_number].balance;
+				reg -= amount;
+				usleep(rand() % 1000);
+				th_checkings[th_params->thread_number].balance = reg;
 
+				//deposit into the savings
 				th_savings[th_params->thread_number].no_deposits++;
-				th_savings[th_params->thread_number].balance += amount;
+				reg = th_savings[th_params->thread_number].balance;
+				reg += amount;
+				usleep(rand() % 1000);
+				th_savings[th_params->thread_number].balance = reg;
+				savings_account.no_deposits++;
+
+				reg = savings_account.balance;
+				reg += amount;
+				usleep(rand() % 1000);
+				savings_account.balance = reg;
+
+				
 
 				printf("TRANSFER CHECKING TO SAVINGS %i\n",amount);
-				fprintf(oFile,"TRANSFER CHECKING TO SAVINGS %i\n",amount);
+				fprintf(oFile,"TRANSFER CHECKING TO SAVINGS %i\n",amount);	
 
 				break;
 			case 5: //Transfer from savings to checking
+				
+				amount = (random() % 100)+ 100;
 
-					amount = (random() % 100)+ 100;
+				if(th_savings[th_params->thread_number].balance < amount){ //Transaction fails
 
-					if(th_savings[th_params->thread_number].balance < amount){ //Transaction fails
+					savings_account.no_rejected++;
+					th_savings[th_params->thread_number].no_rejected++;
 
-						savings_account.no_rejected++;
-						th_savings[th_params->thread_number].no_rejected++;
+					printf("TRANSFER CHECKING TO SAVINGS %i (REJECTED)\n",amount);
+					fprintf(oFile,"TRANSFER CHECKING TO SAVINGS %i (REJECTED)\n",amount);	
 
-						printf("TRANSFER CHECKING TO SAVINGS %i (REJECTED)\n",amount);
-						fprintf(oFile,"TRANSFER CHECKING TO SAVINGS %i (REJECTED)\n",amount);
-
-						break;
-					}
+					break;
+				}
 					// else transaction succeeds
+ 
+				//withdraw from savings account
+				reg = savings_account.balance;
+				reg -= amount;
+				usleep(rand() % 1000);
+				savings_account.balance = reg;
 
-					savings_account.balance -= amount;
-					checking_account.balance += amount;
-					savings_account.no_withdrawals++;
-					checking_account.no_deposits++;
+				savings_account.no_withdrawals++;
+				
+				
+				reg = th_savings[th_params->thread_number].balance;
+				reg -= amount;
+				usleep(rand() % 1000);
+				th_savings[th_params->thread_number].balance = reg;
 
-					th_savings[th_params->thread_number].balance -= amount;
-					th_checkings[th_params->thread_number].balance += amount;
-					th_savings[th_params->thread_number].no_withdrawals++;
-					th_checkings[th_params->thread_number].no_deposits++;
+				th_savings[th_params->thread_number].no_withdrawals++;
+				
+				//deposit into checking
 
-					printf("TRANSFER CHECKING TO SAVINGS %i\n",amount);
-					fprintf(oFile,"TRANSFER CHECKING TO SAVINGS %i\n",amount);
+				reg = checking_account.balance;
+				reg += amount;
+				usleep(rand() % 1000);
+				checking_account.balance = reg;
+
+				checking_account.no_deposits++;
+
+				
+				reg = th_checkings[th_params->thread_number].balance;
+				reg += amount;
+				usleep(rand() % 1000);
+				th_checkings[th_params->thread_number].balance = reg;
+				th_checkings[th_params->thread_number].no_deposits++;
+
+				printf("TRANSFER CHECKING TO SAVINGS %i\n",amount);
+				fprintf(oFile,"TRANSFER CHECKING TO SAVINGS %i\n",amount);
 
 				break;
 			default:
@@ -190,7 +265,7 @@ void* transactions(void* params){
 		pthread_mutex_unlock(&mutex);
 		
 		printf("Thread %i unlocks the mutex \n", th_params->thread_number);
-		usleep(rand() % 40000);
+		
 		
 	}
 

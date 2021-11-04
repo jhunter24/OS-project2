@@ -39,7 +39,7 @@ void* transactions(void* params){
 		int reg;
 		pthread_mutex_lock(&mutex);
 		
-		printf("Thread %i locks the mutex \n", th_params->thread_number);	
+			
 
 			// critical section below
 		
@@ -264,10 +264,23 @@ void* transactions(void* params){
 
 		pthread_mutex_unlock(&mutex);
 		
-		printf("Thread %i unlocks the mutex \n", th_params->thread_number);
+		
 		
 		
 	}
+
+
+	fprintf(oFile,"Stats for: %i \n",th_params->thread_number);
+	fprintf(oFile,"Checking Deposits: %i \n",th_checkings[th_params->thread_number].no_deposits);
+	fprintf(oFile,"Checking Withdrawals: %i \n",th_checkings[th_params->thread_number].no_withdrawals);
+	fprintf(oFile,"Checking Rejected: %i \n",th_checkings[th_params->thread_number].no_rejected);
+
+	fprintf(oFile,"Savings Deposits: %i \n",th_savings[th_params->thread_number].no_deposits);
+	fprintf(oFile,"Savings Withdrawals: %i \n",th_savings[th_params->thread_number].no_withdrawals);
+	fprintf(oFile,"Savings Rejected: %i \n",th_savings[th_params->thread_number].no_rejected);
+
+	fprintf(oFile,"Net Balance(Checking): $%i \n",th_checkings[th_params->thread_number].balance);
+	fprintf(oFile,"Net Balance(Savings): $%i \n",th_savings[th_params->thread_number].balance);
 
 }
 
@@ -345,18 +358,19 @@ int main(int argc,char* argv[]){
 
 	}
 
+		cout << endl << "Balance of checking_account: $" << checking_account.balance << endl;
+		cout << "Balance of savings_account: $" << savings_account.balance << endl;
+
 		if(checking_account.balance != checking_thSum || savings_account.balance != saving_thSum){
 			cout << "The race condition occured" << endl;
 			cout << "Sum of all th_checking: $" << checking_thSum << endl;
 			cout << "Sum of all th_saving: $" << saving_thSum << endl;
-			cout << "Balance of checking_account: $" << checking_account.balance << endl;
-			cout << "Balance of savings_account: $" << savings_account.balance << endl;
+
 		}else{
 			cout << "The race condition did not occur." << endl;
 			cout << "Sum of all th_checking: $" << checking_thSum << endl;
 			cout << "Sum of all th_saving: $" << saving_thSum << endl;
-			cout << "Balance of checking_account: $" << checking_account.balance << endl;
-			cout << "Balance of savings_account: $" << savings_account.balance << endl;
+		
 		}
 
 
